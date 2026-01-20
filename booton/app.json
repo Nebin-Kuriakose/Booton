@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "BootOn",
+    "slug": "booton",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#2196F3"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.booton.app"
+    },
+    "android": {
+      "package": "com.booton.app"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ],
+    "sdkVersion": "52.0.0",
+    "newArchEnabled": true
+  }
+}

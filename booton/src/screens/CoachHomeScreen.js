@@ -1,12 +1,38 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { logout } from '../services/authService';
+import { supabase } from '../services/supabaseClient';
 
 export default function CoachHomeScreen({ navigation }) {
+    const [contacting, setContacting] = useState(false);
     const handleLogout = async () => {
         await logout();
         navigation.replace('RoleSelect');
+    };
+
+    const contactAdmin = async () => {
+        try {
+            if (contacting) return;
+            setContacting(true);
+            // Find an admin user
+            const { data, error } = await supabase
+                .from('users')
+                .select('id, name')
+                .eq('role', 'admin')
+                .limit(1);
+            if (error) throw error;
+            const admin = Array.isArray(data) ? data[0] : data;
+            if (!admin) {
+                alert('No admin user found.');
+                return;
+            }
+            navigation.navigate('Chat', { userId: admin.id, userName: admin.name || 'Admin' });
+        } catch (e) {
+            alert(e.message || 'Failed to open admin chat');
+        } finally {
+            setContacting(false);
+        }
     };
 
     return (
@@ -54,6 +80,18 @@ export default function CoachHomeScreen({ navigation }) {
                     onPress={() => navigation.navigate('CoachProgress')}
                 >
                     <Text style={styles.navText}>Progress</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.navButton}
+                    onPress={contactAdmin}
+                    disabled={contacting}
+                >
+                    {contacting ? (
+                        <ActivityIndicator size={16} color="#4CAF50" />
+                    ) : (
+                        <Text style={styles.navText}>Admin</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </View>
@@ -123,8 +161,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderTopWidth: 1,
         borderTopColor: '#e0e0e0',
-        paddingVertical: 10,
+        paddingVertical: 14,
         paddingHorizontal: 5,
+        paddingBottom: 18,
+        marginBottom: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,

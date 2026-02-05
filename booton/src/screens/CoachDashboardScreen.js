@@ -42,7 +42,7 @@ export default function CoachDashboardScreen({ navigation }) {
 
             const { data: messageData, error: messageError } = await supabase
                 .from('messages')
-                .select('sender_id, receiver_id, content, created_at')
+                .select('sender_id, receiver_id, message, created_at')
                 .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
                 .order('created_at', { ascending: false });
 
@@ -54,28 +54,34 @@ export default function CoachDashboardScreen({ navigation }) {
 
                 for (const msg of messageData) {
                     const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
-
+                    if (!otherUserId) continue;
                     if (!chatMap.has(otherUserId)) {
-                        // Fetch user info
-                        const { data: userData } = await supabase
-                            .from('users')
-                            .select('id, name, email')
-                            .eq('id', otherUserId)
-                            .single();
-
-                        if (userData) {
-                            chatMap.set(otherUserId, {
-                                student_id: otherUserId,
-                                name: userData.name,
-                                email: userData.email,
-                                lastMessage: msg.content,
-                                lastMessageTime: msg.created_at
-                            });
-                        }
+                        chatMap.set(otherUserId, {
+                            student_id: otherUserId,
+                            name: '',
+                            email: '',
+                            lastMessage: msg.message,
+                            lastMessageTime: msg.created_at,
+                        });
                     }
                 }
 
-                // Convert to array and sort by latest message
+                // Bulk fetch user info
+                const ids = Array.from(chatMap.keys());
+                if (ids.length) {
+                    const { data: usersData } = await supabase
+                        .from('users')
+                        .select('id, name, email')
+                        .in('id', ids);
+                    (usersData || []).forEach(u => {
+                        const entry = chatMap.get(u.id);
+                        if (entry) {
+                            entry.name = u.name;
+                            entry.email = u.email;
+                        }
+                    });
+                }
+
                 const chatsArray = Array.from(chatMap.values()).sort(
                     (a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
                 );

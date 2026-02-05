@@ -35,32 +35,49 @@ export default function AdminChatsScreen({ navigation }) {
 
     const fetchChatSessions = async () => {
         try {
-            // Get all distinct users who have messaged the admin
-            const { data, error } = await supabase
+            // Fetch all messages where the admin is either sender or receiver
+            const { data: msgs, error } = await supabase
                 .from('messages')
-                .select('sender_id, sender:users(id, name, role, email)')
-                .eq('receiver_id', currentAdminId)
+                .select('sender_id, receiver_id, message, created_at')
+                .or(`sender_id.eq.${currentAdminId},receiver_id.eq.${currentAdminId}`)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
 
-            if (data && data.length > 0) {
-                // Remove duplicates and get unique chat sessions
-                const uniqueSessions = {};
-                data.forEach((msg) => {
-                    if (msg.sender_id && !uniqueSessions[msg.sender_id]) {
-                        uniqueSessions[msg.sender_id] = {
-                            userId: msg.sender_id,
-                            userName: msg.sender?.name || 'Unknown User',
-                            userRole: msg.sender?.role || 'Unknown',
-                            userEmail: msg.sender?.email || '',
-                            lastMessage: msg.message,
-                            lastMessageTime: msg.created_at
-                        };
-                    }
-                });
+            if (msgs && msgs.length > 0) {
+                const latestByUser = new Map();
+                const otherUserIds = new Set();
 
-                const sessionsArray = Object.values(uniqueSessions);
+                for (const m of msgs) {
+                    const otherId = m.sender_id === currentAdminId ? m.receiver_id : m.sender_id;
+                    if (!otherId) continue;
+                    otherUserIds.add(otherId);
+                    if (!latestByUser.has(otherId)) {
+                        latestByUser.set(otherId, { lastMessage: m.message, lastMessageTime: m.created_at });
+                    }
+                }
+
+                const ids = Array.from(otherUserIds);
+                if (ids.length === 0) {
+                    setChatSessions([]);
+                    return;
+                }
+
+                const { data: usersData, error: usersErr } = await supabase
+                    .from('users')
+                    .select('id, name, role, email')
+                    .in('id', ids);
+                if (usersErr) throw usersErr;
+
+                const sessionsArray = (usersData || []).map(u => ({
+                    userId: u.id,
+                    userName: u.name || 'Unknown User',
+                    userRole: u.role || 'Unknown',
+                    userEmail: u.email || '',
+                    lastMessage: latestByUser.get(u.id)?.lastMessage || '',
+                    lastMessageTime: latestByUser.get(u.id)?.lastMessageTime || null,
+                }));
+
                 setChatSessions(sessionsArray);
             } else {
                 setChatSessions([]);

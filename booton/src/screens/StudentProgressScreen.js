@@ -14,7 +14,7 @@ function CoachProgressCard({ item, fetchProgressForCoach, progressCache, setProg
     }, [item.coach_id]);
 
     const chartData = {
-        labels: progress.map(p => `W${p.week}`),
+        labels: progress.map((_, idx) => `W${idx + 1}`),
         datasets: [{ data: progress.map(p => p.points) }]
     };
 

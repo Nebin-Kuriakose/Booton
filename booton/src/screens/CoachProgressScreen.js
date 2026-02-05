@@ -113,13 +113,14 @@ export default function CoachProgressScreen({ navigation }) {
         try {
             // Get current week
             const currentWeek = Math.ceil(new Date().getDate() / 7);
+            const sid = selectedStudent?.student_id;
 
             const { error } = await supabase
                 .from('progress_tracking')
                 .insert([
                     {
                         coach_id: currentUserId,
-                        student_id: selectedStudent.student_id,
+                        student_id: sid,
                         week: currentWeek,
                         points: parseFloat(weeklyPoints),
                         date: new Date().toISOString(),
@@ -129,10 +130,19 @@ export default function CoachProgressScreen({ navigation }) {
             if (error) throw error;
 
             Alert.alert('Success', 'Points added successfully');
+            // Invalidate cached progress for this student so charts refresh immediately
+            if (sid) {
+                setProgressCache((prev) => {
+                    const next = { ...prev };
+                    delete next[sid];
+                    return next;
+                });
+            }
             setWeeklyPoints('');
             setModalVisible(false);
             setSelectedStudent(null);
-            fetchStudents();
+            // Optionally refresh students list if needed
+            // fetchStudents();
         } catch (error) {
             Alert.alert('Error', error.message);
         }
@@ -163,7 +173,7 @@ export default function CoachProgressScreen({ navigation }) {
         }, [item.student_id, modalVisible]);
 
         const chartData = {
-            labels: progress.map(p => `W${p.week}`),
+            labels: progress.map((_, idx) => `W${idx + 1}`),
             datasets: [{ data: progress.map(p => p.points) }]
         };
 

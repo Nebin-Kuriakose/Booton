@@ -26,6 +26,7 @@ import ReviewsScreen from './screens/ReviewsScreen';
 import StudentCoachesScreen from './screens/StudentCoachesScreen';
 import AdminChatsScreen from './screens/AdminChatsScreen';
 import CoachEditProfileScreen from './screens/CoachEditProfileScreen';
+import AdminValidationScreen from './screens/AdminValidationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -59,6 +60,7 @@ export default function App() {
                     <Stack.Screen name="StudentCoaches" component={StudentCoachesScreen} />
                     <Stack.Screen name="AdminChats" component={AdminChatsScreen} />
                     <Stack.Screen name="CoachEditProfile" component={CoachEditProfileScreen} />
+                    <Stack.Screen name="AdminValidation" component={AdminValidationScreen} />
                 </Stack.Navigator>
             </NavigationContainer>
         </SafeAreaProvider>

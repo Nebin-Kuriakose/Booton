@@ -73,7 +73,7 @@ export default function AdminLoginScreen({ navigation }) {
                         <Text style={styles.label}>Email</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="email"
+                            placeholder="Enter Email"
                             value={email}
                             onChangeText={setEmail}
                             keyboardType="email-address"

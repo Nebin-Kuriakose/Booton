@@ -70,10 +70,7 @@ export default function CoachAuthScreen({ navigation }) {
                 Alert.alert('Invalid Fee', 'Payment fee must be a number');
                 return;
             }
-            if (!achievements.trim()) {
-                Alert.alert('Validation Error', 'Please enter your achievements');
-                return;
-            }
+            // Achievements no longer required
             if (trimmedPassword.length < 6) {
                 Alert.alert('Weak Password', 'Password must be at least 6 characters');
                 return;
@@ -184,18 +181,7 @@ export default function CoachAuthScreen({ navigation }) {
                                 />
                             </View>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>coach id</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Enter your achievements"
-                                    value={achievements}
-                                    onChangeText={setAchievements}
-                                    multiline
-                                    numberOfLines={3}
-                                    editable={!loading}
-                                />
-                            </View>
+                            {/* Removed coach id / achievements textbox */}
                         </>
                     )}
 

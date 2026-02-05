@@ -59,6 +59,13 @@ export default function AdminHomeScreen({ navigation }) {
                 >
                     <Text style={styles.navText}>Applications</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.navButton}
+                    onPress={() => navigation.navigate('AdminValidation')}
+                >
+                    <Text style={styles.navText}>Validation</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -132,8 +139,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderTopWidth: 1,
         borderTopColor: '#e0e0e0',
-        paddingVertical: 10,
+        paddingVertical: 14,
         paddingHorizontal: 10,
+        paddingBottom: 18,
+        marginBottom: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,

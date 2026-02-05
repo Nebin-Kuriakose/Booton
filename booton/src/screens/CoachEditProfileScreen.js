@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabaseClient';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 
 export default function CoachEditProfileScreen({ navigation }) {
     const [coachData, setCoachData] = useState(null);
@@ -136,8 +137,11 @@ export default function CoachEditProfileScreen({ navigation }) {
             if (profileImage && profileImage.startsWith('file://')) {
                 try {
                     console.log('Starting image upload...');
-                    const response = await fetch(profileImage);
-                    const blob = await response.blob();
+                    // Convert local file URI to Blob via base64 data URL (RN-compatible)
+                    const base64 = await FileSystem.readAsStringAsync(profileImage, { encoding: FileSystem.EncodingType.Base64 });
+                    const dataUrl = `data:image/jpeg;base64,${base64}`;
+                    const resp = await fetch(dataUrl);
+                    const blob = await resp.blob();
                     console.log('Blob created, size:', blob.size);
 
                     const fileName = `${currentUserId}-profile-${Date.now()}.jpg`;

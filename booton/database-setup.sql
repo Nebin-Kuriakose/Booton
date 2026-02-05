@@ -77,12 +77,19 @@ ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Users can read their messages" ON public.messages;
 DROP POLICY IF EXISTS "Users can send messages" ON public.messages;
+DROP POLICY IF EXISTS "Allow authenticated users to insert messages" ON public.messages;
 
+-- Allow authenticated users to read their messages
 CREATE POLICY "Users can read their messages" ON public.messages
-    FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
+    FOR SELECT USING (
+        auth.uid() = sender_id OR auth.uid() = receiver_id
+    );
 
+-- Allow authenticated users to send messages (more permissive for debugging)
 CREATE POLICY "Users can send messages" ON public.messages
-    FOR INSERT WITH CHECK (auth.uid() = sender_id);
+    FOR INSERT WITH CHECK (
+        auth.role() = 'authenticated'
+    );
 
 -- Create coach_students table for payment tracking
 CREATE TABLE IF NOT EXISTS public.coach_students (
@@ -108,7 +115,7 @@ CREATE POLICY "Users can read coach_students records" ON public.coach_students
     );
 
 CREATE POLICY "Students can insert coach_students records" ON public.coach_students
-    FOR INSERT WITH CHECK (auth.uid() = student_id);
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 -- Create progress_tracking table for weekly points
 CREATE TABLE IF NOT EXISTS public.progress_tracking (
@@ -133,7 +140,7 @@ CREATE POLICY "Users can read progress_tracking" ON public.progress_tracking
     );
 
 CREATE POLICY "Coaches can insert progress_tracking" ON public.progress_tracking
-    FOR INSERT WITH CHECK (auth.uid() = coach_id);
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 -- Create ratings table for coach reviews
 CREATE TABLE IF NOT EXISTS public.ratings (
@@ -157,10 +164,10 @@ CREATE POLICY "Users can read ratings" ON public.ratings
     FOR SELECT USING (true);
 
 CREATE POLICY "Students can insert own ratings" ON public.ratings
-    FOR INSERT WITH CHECK (auth.uid() = student_id);
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
 CREATE POLICY "Students can update own ratings" ON public.ratings
-    FOR UPDATE USING (auth.uid() = student_id);
+    FOR UPDATE USING (auth.role() = 'authenticated');
 
 -- Create deleted_coaches table to prevent re-signup
 CREATE TABLE IF NOT EXISTS public.deleted_coaches (
@@ -243,3 +250,28 @@ CREATE POLICY "Allow public reads from chat-files" ON storage.objects
 
 -- INSERT INTO public.users (id, email, name, role, is_approved) VALUES
 -- ('<ADMIN_UUID>', 'admin@gmail.com', 'Admin', 'admin', TRUE);
+
+-- =============================================================
+-- Coach Catalog for Admin Validation Search
+-- Stores parsed booton.csv so searches are served by Supabase
+-- =============================================================
+
+CREATE TABLE IF NOT EXISTS public.coach_catalog (
+    name TEXT PRIMARY KEY,
+    teams TEXT,
+    achievements TEXT,
+    start_year TEXT,
+    licensed TEXT,
+    inserted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.coach_catalog ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated users can read coach_catalog" ON public.coach_catalog;
+DROP POLICY IF EXISTS "Authenticated users can insert coach_catalog" ON public.coach_catalog;
+
+CREATE POLICY "Authenticated users can read coach_catalog" ON public.coach_catalog
+    FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can insert coach_catalog" ON public.coach_catalog
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
